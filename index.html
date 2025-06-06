@@ -1,1 +1,145 @@
-<!DOCTYPE html><html><body>Hello World</body></html>
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Seat Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --green: #056147;
+      }
+    </style>
+  </head>
+  <body class="bg-white text-gray-900 p-4">
+    <div class="max-w-md mx-auto">
+      <h1 class="text-2xl font-bold mb-4 text-center">Car Seat Compatibility Checker</h1>
+  
+      <!-- Car Brand Dropdown -->
+      <label for="brand" class="block mb-2">Car Brand:</label>
+      <select id="brand" class="w-full p-2 border rounded mb-4">
+        <option value="">Select a brand</option>
+      </select>
+  
+      <!-- ✅ ADD THIS: Car Model Dropdown -->
+      <label for="model" class="block mb-2">Car Model:</label>
+      <select id="model" class="w-full p-2 border rounded mb-4">
+        <option value="">Select a model</option>
+      </select>
+  
+      <!-- Button to go to results -->
+      <button onclick="goToResults()" class="w-full bg-[#056147] text-white py-2 px-4 rounded">
+        Check Compatibility
+      </button>
+    </div>
+  </body>
+  
+    <script>
+      function goToResults() {
+        const brand = document.getElementById("brand").value;
+        const model = document.getElementById("model").value.trim();
+
+        if (!brand || !model) {
+          alert("Please enter both brand and model.");
+          return;
+        }
+
+        const url = `results.html?make=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`;
+        window.location.href = url;
+      }
+    </script>
+  </body>
+</html>
+
+<!-- results.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compatibility Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --green: #056147;
+      }
+    </style>
+  </head>
+  <body class="bg-white min-h-screen p-6 text-gray-800">
+    <div class="max-w-md mx-auto">
+      <h1 class="text-2xl font-bold mb-4 text-[var(--green)]">Compatibility Results</h1>
+      <div id="results"></div>
+      <button onclick="window.location.href='index.html'" class="mt-6 w-full bg-gray-200 py-2 rounded">Check Another Car</button>
+    </div>
+
+    <script>
+        const API_BASE = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec"; // Replace this
+      
+        const brandSelect = document.getElementById("brand");
+        const modelSelect = document.getElementById("model");
+      
+        let modelMap = {};
+      
+        async function loadDropdowns() {
+          try {
+            const res = await fetch(`${API_BASE}?dropdown=true`);
+            const data = await res.json();
+      
+            if (!data.success) throw new Error("Failed to load");
+      
+            modelMap = data.models;
+      
+            // Populate brand options
+            data.brands.forEach(brand => {
+              const option = document.createElement("option");
+              option.value = brand;
+              option.textContent = brand;
+              brandSelect.appendChild(option);
+            });
+      
+            brandSelect.addEventListener("change", updateModels);
+          } catch (err) {
+            alert("Could not load brand/model data");
+          }
+        }
+      
+        function updateModels() {
+          const selectedBrand = brandSelect.value;
+          const models = modelMap[selectedBrand] || [];
+      
+          // Clear old options
+          modelSelect.innerHTML = "";
+      
+          const defaultOption = document.createElement("option");
+          defaultOption.value = "";
+          defaultOption.textContent = "Select a model";
+          modelSelect.appendChild(defaultOption);
+      
+          models.forEach(model => {
+            const option = document.createElement("option");
+            option.value = model;
+            option.textContent = model;
+            modelSelect.appendChild(option);
+          });
+        }
+      
+        function goToResults() {
+          const brand = brandSelect.value;
+          const model = modelSelect.value;
+      
+          if (!brand || !model) {
+            alert("Please select both brand and model.");
+            return;
+          }
+      
+          const url = `results.html?make=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`;
+          window.location.href = url;
+        }
+      
+        // Load dropdowns on page load
+        window.onload = loadDropdowns;
+      </script>
+      
+  </body>
+</html>
