@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compatibility Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --green: #056147;
+      }
+    </style>
+  </head>
+  <body class="bg-white min-h-screen p-4 text-gray-800">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-2xl font-bold text-center mb-4">Baby seat compatibility</h1>
+
+      <div class="text-center text-lg mb-4">
+        <div>Make <span id="make" class="font-semibold"></span></div>
+        <div>Model <span id="model" class="font-semibold"></span></div>
+      </div>
+
+      <!-- Optional: insert car diagram image here if desired -->
+      <!-- <img src="car-diagram.png" alt="Car layout" class="mx-auto mb-4" /> -->
+
+      <div id="results"></div>
+
+      <div class="text-center mt-6">
+        <button onclick="window.location.href='index.html'" class="bg-gray-200 px-4 py-2 rounded">
+          Check Another Car
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const make = params.get("make");
+      const model = params.get("model");
+
+      document.getElementById("make").textContent = make;
+      document.getElementById("model").textContent = model;
+
+      const API_URL = "https://script.google.com/macros/s/AKfycbzJmfGCaRGI7gfOzrxJsWA1ctqBhxhZRYIhpoUYb1AvPMJaUcaF5Yk4cSmuF86JzBsO0Q/exec";
+
+      async function fetchData() {
+        try {
+          const res = await fetch(`${API_URL}?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`);
+          const data = await res.json();
+
+          if (!data.success || !data.result.searchResults.length) {
+            document.getElementById("results").innerHTML = `<p class='text-center text-red-600'>No compatibility data found for ${make} ${model}.</p>`;
+            return;
+          }
+
+          const container = document.getElementById("results");
+          const rows = data.result.searchResults;
+
+          // Sort by car seat brand
+          rows.sort((a, b) => a[5].localeCompare(b[5]));
+
+          let currentBrand = null;
+          let html = "";
+
+          for (const row of rows) {
+            const [_, __, year, seatCount, ___, seatBrand, seatModel, ...compat] = row;
+            const numSeats = parseInt(seatCount);
+
+            // New group heading for brand
+            if (seatBrand !== currentBrand) {
+              html += `<h2 class="mt-6 mb-2 font-semibold text-lg">${seatBrand}</h2>`;
+              currentBrand = seatBrand;
+            }
+
+            html += `<div class="flex items-center gap-4 border-b py-1">
+              <div class="w-48 font-medium text-sm">${seatModel}</div>`;
+
+            for (let i = 0; i < numSeats; i++) {
+              const val = (compat[i] || "-").trim();
+              html += `<div class="w-8 text-center text-sm ${val === 'Y' ? 'text-green-600' : val === 'N' ? 'text-red-600' : 'text-gray-400'}">${val}</div>`;
+            }
+
+            html += `</div>`;
+          }
+
+          container.innerHTML = html;
+        } catch (err) {
+          document.getElementById("results").innerHTML = `<p class='text-center text-red-600'>Error fetching data.</p>`;
+        }
+      }
+
+      fetchData();
+    </script>
+  </body>
+</html>
