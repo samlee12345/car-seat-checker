@@ -36,6 +36,10 @@
   </body>
   
     <script>
+        if (localStorage.getItem("accessGranted") !== "true") {
+            window.location.href = "access.html";
+        }
+
       function goToResults() {
         const brand = document.getElementById("brand").value;
         const model = document.getElementById("model").value.trim();
@@ -68,13 +72,13 @@
   </head>
   <body class="bg-white min-h-screen p-6 text-gray-800">
     <div class="max-w-md mx-auto">
-      <h1 class="text-2xl font-bold mb-4 text-[var(--green)]">Compatibility Results</h1>
+      <!-- <h1 class="text-2xl font-bold mb-4 text-[var(--green)]">Compatibility Results</h1> -->
       <div id="results"></div>
-      <button onclick="window.location.href='index.html'" class="mt-6 w-full bg-gray-200 py-2 rounded">Check Another Car</button>
+      <!-- <button onclick="window.location.href='index.html'" class="mt-6 w-full bg-gray-200 py-2 rounded">Check Another Car</button> -->
     </div>
 
     <script>
-        const API_BASE = "https://script.google.com/macros/s/AKfycbyVsUvUf7iMhN7N-MYjr-1nPSdK4mso-0BH2tzJmAe9rVRbVqhWoAOPQmgPQAisFLsdfQ/exec";
+        const API_BASE = "https://script.google.com/macros/s/AKfycbzJmfGCaRGI7gfOzrxJsWA1ctqBhxhZRYIhpoUYb1AvPMJaUcaF5Yk4cSmuF86JzBsO0Q/exec";
       
         const brandSelect = document.getElementById("brand");
         const modelSelect = document.getElementById("model");

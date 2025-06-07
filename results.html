@@ -16,12 +16,11 @@
       <h1 class="text-2xl font-bold text-center mb-4">Baby seat compatibility</h1>
 
       <div class="text-center text-lg mb-4">
-        <div>Make <span id="make" class="font-semibold"></span></div>
-        <div>Model <span id="model" class="font-semibold"></span></div>
+        <div>Make: <span id="make" class="font-semibold"></span></div>
+        <div>Model: <span id="model" class="font-semibold"></span></div>
+        <div id="isize-container" style="display: none;">i-Size: <span id="isize" class="font-semibold"></span></div>
+        <div id="notes-container" style="display: none;">Notes: <span id="notes" class="font-semibold"></span></div>
       </div>
-
-      <!-- Optional: insert car diagram image here if desired -->
-      <!-- <img src="car-diagram.png" alt="Car layout" class="mx-auto mb-4" /> -->
 
       <div id="results"></div>
 
@@ -33,6 +32,10 @@
     </div>
 
     <script>
+        if (localStorage.getItem("accessGranted") !== "true") {
+            window.location.href = "access.html";
+        }
+
       const params = new URLSearchParams(window.location.search);
       const make = params.get("make");
       const model = params.get("model");
@@ -55,35 +58,72 @@
           const container = document.getElementById("results");
           const rows = data.result.searchResults;
 
-          // Sort by car seat brand
-          rows.sort((a, b) => a[5].localeCompare(b[5]));
+          const firstRow = rows[0];
+          const isize = firstRow[3];
+          const notes = firstRow[2];
 
-          let currentBrand = null;
+          if (isize && isize.trim() !== "") {
+            document.getElementById("isize").textContent = isize;
+            document.getElementById("isize-container").style.display = "block";
+          }
+
+          if (notes && notes.trim() !== "") {
+            document.getElementById("notes").textContent = notes;
+            document.getElementById("notes-container").style.display = "block";
+          }
+
+          const grouped = {};
+          for (const row of rows) {
+            const brand = row[4];
+            if (!grouped[brand]) grouped[brand] = [];
+            grouped[brand].push(row);
+          }
+
           let html = "";
 
-          for (const row of rows) {
-            const [_, __, year, seatCount, ___, seatBrand, seatModel, ...compat] = row;
-            const numSeats = parseInt(seatCount);
+          for (const brand in grouped) {
+            const models = grouped[brand];
+            const compatStartIndex = 6;
 
-            // New group heading for brand
-            if (seatBrand !== currentBrand) {
-              html += `<h2 class="mt-6 mb-2 font-semibold text-lg">${seatBrand}</h2>`;
-              currentBrand = seatBrand;
+            
+            const maxSeats = models.reduce((max, row) => {
+              const compatSlice = row.slice(compatStartIndex);
+              const count = compatSlice.filter(cell => cell === 'Y' || cell === 'N').length;
+              return Math.max(max, count);
+            }, 0);
+
+            html += `<div class="mt-6 mb-2">
+                        <h2 class="font-semibold text-lg mb-1">${brand}</h2>
+                        <div class="flex items-center gap-2 ml-4 mb-1">
+                          <div class="w-28"></div>`;
+            for (let i = 0; i < maxSeats; i++) {
+              html += `<div class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400 text-sm text-gray-700">${i + 1}</div>`;
             }
+            html += `</div>`;
 
-            html += `<div class="flex items-center gap-4 border-b py-1">
-              <div class="w-48 font-medium text-sm">${seatModel}</div>`;
+            models.forEach(row => {
+              const seatModel = row[5];
+              const compatSlice = row.slice(compatStartIndex);
+              console.log("Row compat:", compatSlice); // debug
+              const compat = compatSlice.filter(cell => cell === 'Y' || cell === 'N');
 
-            for (let i = 0; i < numSeats; i++) {
-              const val = (compat[i] || "-").trim();
-              html += `<div class="w-8 text-center text-sm ${val === 'Y' ? 'text-green-600' : val === 'N' ? 'text-red-600' : 'text-gray-400'}">${val}</div>`;
-            }
+              html += `<div class="mb-1">
+                          <div class="flex items-center gap-2 border-b py-1 ml-4">
+                            <div class="w-28 text-sm font-medium">${seatModel}</div>`;
+              for (let i = 0; i < compat.length; i++) {
+                const val = (compat[i] || "").trim();
+                html += `<div class="w-8 text-center text-sm ${val === 'Y' ? 'text-green-600' : val === 'N' ? 'text-red-600' : 'text-gray-400'}">${val || '-'}</div>`;
+              }
+              html += `</div>
+                        </div>`;
+            });
 
             html += `</div>`;
           }
 
           container.innerHTML = html;
         } catch (err) {
+          console.error("Data fetch error:", err);
           document.getElementById("results").innerHTML = `<p class='text-center text-red-600'>Error fetching data.</p>`;
         }
       }

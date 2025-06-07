@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Access Code</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --green: #056147;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-sm">
+    <h2 class="text-xl font-bold mb-4 text-center">Access Required</h2>
+    <p class="text-sm mb-4 text-center">Please enter your access code.</p>
+    <input id="accessCode" type="password" placeholder="Access Code"
+      class="w-full border border-gray-300 rounded px-3 py-2 mb-4" />
+    <button onclick="checkCode()" class="w-full bg-[var(--green)] text-white py-2 rounded">
+      Submit
+    </button>
+    <p id="error" class="text-red-600 text-sm mt-2 hidden text-center">Invalid code. Please try again.</p>
+  </div>
+
+  <script>
+    const CORRECT_CODE = "1357924680"; // Replace with your actual access code
+
+    function checkCode() {
+      const input = document.getElementById("accessCode").value.trim();
+      if (input === CORRECT_CODE) {
+        localStorage.setItem("accessGranted", "true");
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("error").classList.remove("hidden");
+      }
+    }
+  </script>
+</body>
+</html>
