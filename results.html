@@ -13,13 +13,14 @@
   </head>
   <body class="bg-white min-h-screen p-4 text-gray-800">
     <div class="max-w-3xl mx-auto">
-      <h1 class="text-2xl font-bold text-center mb-4">Baby seat compatibility</h1>
+      <h1 class="text-2xl font-bold text-center mb-4">Car Seat Compatibility Checker</h1>
 
       <div class="text-center text-lg mb-4">
         <div>Make: <span id="make" class="font-semibold"></span></div>
         <div>Model: <span id="model" class="font-semibold"></span></div>
         <div id="isize-container" style="display: none;">i-Size: <span id="isize" class="font-semibold"></span></div>
         <div id="notes-container" style="display: none;">Notes: <span id="notes" class="font-semibold"></span></div>
+        <img src="images/SeatPositions.jpeg" alt="SeatPositions" class="mx-auto mb-4 max-w-[200px]" />
       </div>
 
       <div id="results"></div>
@@ -33,102 +34,107 @@
 
     <script>
         if (localStorage.getItem("accessGranted") !== "true") {
-            window.location.href = "access.html";
+          window.location.href = "access.html";
         }
-
-      const params = new URLSearchParams(window.location.search);
-      const make = params.get("make");
-      const model = params.get("model");
-
-      document.getElementById("make").textContent = make;
-      document.getElementById("model").textContent = model;
-
-      const API_URL = "https://script.google.com/macros/s/AKfycbzJmfGCaRGI7gfOzrxJsWA1ctqBhxhZRYIhpoUYb1AvPMJaUcaF5Yk4cSmuF86JzBsO0Q/exec";
-
-      async function fetchData() {
-        try {
-          const res = await fetch(`${API_URL}?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`);
-          const data = await res.json();
-
-          if (!data.success || !data.result.searchResults.length) {
-            document.getElementById("results").innerHTML = `<p class='text-center text-red-600'>No compatibility data found for ${make} ${model}.</p>`;
-            return;
-          }
-
-          const container = document.getElementById("results");
-          const rows = data.result.searchResults;
-
-          const firstRow = rows[0];
-          const isize = firstRow[3];
-          const notes = firstRow[2];
-
-          if (isize && isize.trim() !== "") {
-            document.getElementById("isize").textContent = isize;
-            document.getElementById("isize-container").style.display = "block";
-          }
-
-          if (notes && notes.trim() !== "") {
-            document.getElementById("notes").textContent = notes;
-            document.getElementById("notes-container").style.display = "block";
-          }
-
-          const grouped = {};
-          for (const row of rows) {
-            const brand = row[4];
-            if (!grouped[brand]) grouped[brand] = [];
-            grouped[brand].push(row);
-          }
-
-          let html = "";
-
-          for (const brand in grouped) {
-            const models = grouped[brand];
-            const compatStartIndex = 6;
-
-            
-            const maxSeats = models.reduce((max, row) => {
-              const compatSlice = row.slice(compatStartIndex);
-              const count = compatSlice.filter(cell => cell === 'Y' || cell === 'N').length;
-              return Math.max(max, count);
-            }, 0);
-
-            html += `<div class="mt-6 mb-2">
-                        <h2 class="font-semibold text-lg mb-1">${brand}</h2>
-                        <div class="flex items-center gap-2 ml-4 mb-1">
-                          <div class="w-28"></div>`;
-            for (let i = 0; i < maxSeats; i++) {
-              html += `<div class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400 text-sm text-gray-700">${i + 1}</div>`;
+      
+        const params = new URLSearchParams(window.location.search);
+        const make = params.get("make");
+        const model = params.get("model");
+      
+        document.getElementById("make").textContent = make;
+        document.getElementById("model").textContent = model;
+      
+        const API_URL = "https://script.google.com/macros/s/AKfycbzJmfGCaRGI7gfOzrxJsWA1ctqBhxhZRYIhpoUYb1AvPMJaUcaF5Yk4cSmuF86JzBsO0Q/exec";
+      
+        async function fetchData() {
+          try {
+            const res = await fetch(`${API_URL}?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`);
+            const data = await res.json();
+      
+            if (!data.success || !data.result.searchResults.length) {
+              document.getElementById("results").innerHTML = `<p class='text-center text-red-600'>No compatibility data found for ${make} ${model}.</p>`;
+              return;
             }
-            html += `</div>`;
-
-            models.forEach(row => {
-              const seatModel = row[5];
-              const compatSlice = row.slice(compatStartIndex);
-              console.log("Row compat:", compatSlice); // debug
-              const compat = compatSlice.filter(cell => cell === 'Y' || cell === 'N');
-
-              html += `<div class="mb-1">
-                          <div class="flex items-center gap-2 border-b py-1 ml-4">
-                            <div class="w-28 text-sm font-medium">${seatModel}</div>`;
-              for (let i = 0; i < compat.length; i++) {
-                const val = (compat[i] || "").trim();
-                html += `<div class="w-8 text-center text-sm ${val === 'Y' ? 'text-green-600' : val === 'N' ? 'text-red-600' : 'text-gray-400'}">${val || '-'}</div>`;
+      
+            const container = document.getElementById("results");
+            const rows = data.result.searchResults;
+      
+            const firstRow = rows[0];
+            const isize = firstRow[3];
+            const notes = firstRow[2];
+            const imageUrl = firstRow[14];
+      
+            if (isize && isize.trim() !== "") {
+              document.getElementById("isize").textContent = isize;
+              document.getElementById("isize-container").style.display = "block";
+            }
+      
+            if (notes && notes.trim() !== "") {
+              document.getElementById("notes").textContent = notes;
+              document.getElementById("notes-container").style.display = "block";
+            }
+      
+            const grouped = {};
+            for (const row of rows) {
+              const brand = row[4];
+              if (!grouped[brand]) grouped[brand] = [];
+              grouped[brand].push(row);
+            }
+      
+            let html = "";
+      
+            for (const brand in grouped) {
+              const models = grouped[brand];
+              const compatStartIndex = 6;
+      
+              // Determine the last seat index that has a Y or N (to include "-" in between)
+              let maxSeatIndex = 0;
+              models.forEach(row => {
+                const compatSlice = row.slice(compatStartIndex);
+                for (let i = compatSlice.length - 1; i >= 0; i--) {
+                  const val = compatSlice[i];
+                  if (val === "Y" || val === "N") {
+                    maxSeatIndex = Math.max(maxSeatIndex, i);
+                    break;
+                  }
+                }
+              });
+      
+              html += `<div class="mt-6 mb-2">
+                          <h2 class="font-semibold text-lg mb-1">${brand}</h2>
+                          <div class="flex items-center gap-2 ml-4 mb-1">
+                            <div class="w-28"></div>`;
+              for (let i = 0; i <= maxSeatIndex; i++) {
+                html += `<div class="w-8 h-8 flex items-center justify-center rounded-full border border-gray-400 text-sm text-gray-700">${i + 1}</div>`;
               }
-              html += `</div>
-                        </div>`;
-            });
-
-            html += `</div>`;
+              html += `</div>`;
+      
+              models.forEach(row => {
+                const seatModel = row[5];
+                const compatSlice = row.slice(compatStartIndex, compatStartIndex + maxSeatIndex + 1);
+      
+                html += `<div class="mb-1">
+                            <div class="flex items-center gap-2 border-b py-1 ml-4">
+                              <div class="w-28 text-sm font-medium">${seatModel}</div>`;
+                for (let i = 0; i <= maxSeatIndex; i++) {
+                  const val = (compatSlice[i] || "").trim();
+                  html += `<div class="w-8 text-center text-sm ${val === 'Y' ? 'text-green-600' : val === 'N' ? 'text-red-600' : 'text-gray-400'}">${val || '-'}</div>`;
+                }
+                html += `</div></div>`;
+              });
+      
+              html += `</div>`;
+            }
+      
+            container.innerHTML = html;
+          } catch (err) {
+            console.error("Data fetch error:", err);
+            document.getElementById("results").innerHTML = `<p class='text-center text-red-600'>Error fetching data.</p>`;
           }
-
-          container.innerHTML = html;
-        } catch (err) {
-          console.error("Data fetch error:", err);
-          document.getElementById("results").innerHTML = `<p class='text-center text-red-600'>Error fetching data.</p>`;
         }
-      }
-
-      fetchData();
-    </script>
+      
+        fetchData();
+      </script>
+      
   </body>
 </html>
